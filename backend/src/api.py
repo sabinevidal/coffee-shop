@@ -16,7 +16,7 @@ CORS(app)
 !! NOTE THIS WILL DROP ALL RECORDS AND START YOUR DB FROM SCRATCH
 !! NOTE THIS MUST BE UNCOMMENTED ON FIRST RUN
 '''
-# db_drop_and_create_all()
+db_drop_and_create_all()
 
 ## ROUTES
 '''
@@ -27,6 +27,25 @@ CORS(app)
     returns status code 200 and json {"success": True, "drinks": drinks} where drinks is the list of drinks
         or appropriate status code indicating reason for failure
 '''
+@app.route('/drinks')
+def get_drinks():
+    # get all drinks
+    drinks =  Drink.query.all()
+
+    # 404 if no drinks found
+    if len(drinks) == 0:
+        abort(404)
+
+    # format using .short()
+    drinks_short = [drink.short() for drink in drinks]
+
+    # return drinks
+    return jsonify({
+        'success': True,
+        'drinks': drinks_short
+    })
+
+
 
 
 '''
