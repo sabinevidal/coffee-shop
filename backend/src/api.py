@@ -41,6 +41,7 @@ def get_drinks():
 
     # return drinks
     return jsonify({
+        # 'status_code': 200 TODO: CHECK
         'success': True,
         'drinks': drinks_short
     })
@@ -56,6 +57,24 @@ def get_drinks():
     returns status code 200 and json {"success": True, "drinks": drinks} where drinks is the list of drinks
         or appropriate status code indicating reason for failure
 '''
+@app.route('/drinks-detail')
+@requires_auth('get:drinks-detail')
+def get_drinks_detail(jwt):
+    # get all drinks 
+    drinks = Drink.query.all().long()
+    
+    # 404 if no drinks
+    if len(drinks) == 0:
+        abort(404)
+
+    # format using .long()
+    drinks_long = [drink.long() for drink in drinks]
+
+    # return drinks
+    return jsonify({
+        'success': True,
+        'drinks': drinks_long
+    })
 
 
 '''
@@ -67,7 +86,28 @@ def get_drinks():
     returns status code 200 and json {"success": True, "drinks": drink} where drink an array containing only the newly created drink
         or appropriate status code indicating reason for failure
 '''
+@app.route('/drinks', methods=['POST'])
+@requires_auth('post:drinks')
+def add_drink(jwt):
+    # get drink info form request
+    body = request.get_json()
+    title = body['title']
+    recipe = body['recipe']
 
+    # create new drink
+    drink = Drink(title=title, recipe=json.dumps(recipe)) #TODO: what is going on?? 
+
+    try:
+        # add drink to database
+        drink.insert()
+    except Exception as e:
+        print('ERROR: ', str(e) )
+        abort(422)
+
+    return jsonify({
+        'success': True,
+        'drinks': drink.long()
+    })
 
 '''
 @TODO implement endpoint
@@ -80,6 +120,43 @@ def get_drinks():
     returns status code 200 and json {"success": True, "drinks": drink} where drink an array containing only the updated drink
         or appropriate status code indicating reason for failure
 '''
+@app.route('/drinks/<int:id>', methods=['PATCH'])
+@requires_auth('patch:drinks')
+def edit_drink(*args, **kwargs):
+    # get ID from kwargs
+    id = kwargs['id']
+
+    # get drink by id
+    drink = Drink.query.filter_by(id=id).one_or_none()
+
+    # 404 if drink not found
+    if drink is None:
+        abort(404)
+
+    # get request body and update title/recipe
+    body = request.get_json()
+
+    if 'title' in body:
+        drink.title = body['title']
+    
+    if 'recipe' in body:
+        drink.recipe = body['recipe']
+
+    # update drink in db
+    try:
+        drink.insert()
+    except Exception as e:
+        print('EXCEPTION: ', str(e))
+        abort(400)
+
+    # array and return
+    drink = [drink.long()]
+
+    return jsonify({
+        'success': True,
+        'drinks': drink
+    })
+    
 
 
 '''
