@@ -46,9 +46,6 @@ def get_drinks():
         'drinks': drinks_short
     })
 
-
-
-
 '''
 @TODO implement endpoint
     GET /drinks-detail
@@ -75,7 +72,6 @@ def get_drinks_detail(jwt):
         'success': True,
         'drinks': drinks_long
     })
-
 
 '''
 @TODO implement endpoint
@@ -156,8 +152,6 @@ def edit_drink(*args, **kwargs):
         'success': True,
         'drinks': drink
     })
-    
-
 
 '''
 @TODO implement endpoint
@@ -169,7 +163,30 @@ def edit_drink(*args, **kwargs):
     returns status code 200 and json {"success": True, "delete": id} where id is the id of the deleted record
         or appropriate status code indicating reason for failure
 '''
+@app.route('/drinks/<int:id>', methods=['DELETE'])
+@requires_auth('delete:drinks')
+def delete_drink(*args, **kwargs):
+    # get id from kwargs TODO: whyyyy?
+    id = kwargs['id']
 
+    # get drink by id 
+    drink = Drink.query.filter_by(id=id).one_or_none()
+
+    # 404 if drink not found
+    if drink is None:
+        abort(404)
+    
+    # delete
+    try: 
+        drink.delete()
+    except Exception as e:
+        print('EXCEPTION: ', str(e))
+        abort(400)
+
+    return jsonify({
+        'success': True,
+        'delete': drink.id
+    })
 
 ## Error Handling
 '''
@@ -193,12 +210,21 @@ def unprocessable(error):
                     }), 404
 
 '''
+@app.errorhandler(404)
+def not_found(error):
+    return jsonify({
+                    "success": False, 
+                    "error": 404,
+                    "message": "resource not found"
+                    }), 404
 
-'''
-@TODO implement error handler for 404
-    error handler should conform to general task above 
-'''
-
+@app.errorhandler(400)
+def bad_request(error):
+    return jsonify({
+                    "success": False, 
+                    "error": 400,
+                    "message": "bad request"
+                    }), 400
 
 '''
 @TODO implement error handler for AuthError
