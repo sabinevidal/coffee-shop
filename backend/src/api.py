@@ -21,13 +21,14 @@ CORS(app)
 # ----------------------------------
 # ROUTES
 # ----------------------------------
-'''
-GET Route handler for getting list of drinks
-'''
+
+# GET Route handler for getting list of drinks
+
+
 @app.route('/drinks')
 def get_drinks():
     # get all drinks
-    drinks =  Drink.query.all()
+    drinks = Drink.query.all()
 
     # 404 if no drinks found
     if len(drinks) == 0:
@@ -43,16 +44,16 @@ def get_drinks():
         'drinks': drinks_short
     })
 
-'''
-GET Route handler for getting drink details
-Requires the 'get:drinks-detail' permission
-'''
+# GET Route handler for getting drink details
+# Requires the 'get:drinks-detail' permission
+
+
 @app.route('/drinks-detail')
 @requires_auth('get:drinks-detail')
 def get_drinks_detail(jwt):
-    # get all drinks 
+    # get all drinks
     drinks = Drink.query.all()
-    
+
     # 404 if no drinks
     if len(drinks) == 0:
         abort(404)
@@ -66,10 +67,10 @@ def get_drinks_detail(jwt):
         'drinks': drinks_long
     })
 
-'''
-POST Route handler for adding new drink
-Requires the 'post:drinks' permission
-'''
+# POST Route handler for adding new drink
+# Requires the 'post:drinks' permission
+
+
 @app.route('/drinks', methods=['POST'])
 @requires_auth('post:drinks')
 def add_drink(jwt):
@@ -77,15 +78,15 @@ def add_drink(jwt):
     body = request.get_json()
     title = body.get('title', None)
     recipe = body.get('recipe', None)
-    
+
     try:
         # create new drink
-        new_drink = Drink(title=title, recipe=json.dumps([recipe])) #TODO: what is going on?? 
+        new_drink = Drink(title=title, recipe=json.dumps([recipe]))
         # add drink to database
         new_drink.insert()
 
     except Exception as e:
-        print('ERROR: ', str(e) )
+        print('ERROR: ', str(e))
         abort(422)
 
     return jsonify({
@@ -93,11 +94,10 @@ def add_drink(jwt):
         'drinks': new_drink.long()
     })
 
-'''
-PATCH Route handler for editing drink
-Requires the 'patch:drinks' permission
+# PATCH Route handler for editing drink
+# Requires the 'patch:drinks' permission
 
-'''
+
 @app.route('/drinks/<int:id>', methods=['PATCH'])
 @requires_auth('patch:drinks')
 def edit_drink(*args, **kwargs):
@@ -116,7 +116,7 @@ def edit_drink(*args, **kwargs):
 
     if 'title' in body:
         drink.title = body['title']
-    
+
     if 'recipe' in body:
         drink.recipe = body['recipe']
 
@@ -135,25 +135,25 @@ def edit_drink(*args, **kwargs):
         'drinks': drink
     })
 
-'''
-DELETE Route handler for deleting drink
-Requires the 'delete:drinks' permission
-'''
+# DELETE Route handler for deleting drink
+# Requires the 'delete:drinks' permission
+
+
 @app.route('/drinks/<int:id>', methods=['DELETE'])
 @requires_auth('delete:drinks')
 def delete_drink(*args, **kwargs):
     # get id from kwargs
     id = kwargs['id']
 
-    # get drink by id 
+    # get drink by id
     drink = Drink.query.filter_by(id=id).one_or_none()
 
     # 404 if drink not found
     if drink is None:
         abort(404)
-    
+
     # delete
-    try: 
+    try:
         drink.delete()
     except Exception as e:
         print('EXCEPTION: ', str(e))
@@ -169,38 +169,42 @@ def delete_drink(*args, **kwargs):
 # ----------------------------------
 # Error handling for unprocessable entity
 
+
 @app.errorhandler(422)
 def unprocessable(error):
     return jsonify({
-                    "success": False, 
+                    "success": False,
                     "error": 422,
                     "message": "unprocessable"
                     }), 422
 
 # Error handling for resource not found
 
+
 @app.errorhandler(404)
 def not_found(error):
     return jsonify({
-                    "success": False, 
+                    "success": False,
                     "error": 404,
                     "message": "resource not found"
                     }), 404
 
 # Error handling for bad request
 
+
 @app.errorhandler(400)
 def bad_request(error):
     return jsonify({
-                    "success": False, 
+                    "success": False,
                     "error": 400,
                     "message": "bad request"
                     }), 400
 
 # Error handling  for AuthError
 
+
 @app.errorhandler(AuthError)
 def handle_auth_error(ex):
     response = jsonify(ex.error)
     response.status_code = ex.status_code
-    return response 
+    return response

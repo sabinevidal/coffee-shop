@@ -9,11 +9,13 @@ AUTH0_DOMAIN = 'coffee-shop-app.eu.auth0.com'
 ALGORITHMS = ['RS256']
 API_AUDIENCE = 'http://coffee-shop-app'
 
-## AuthError Exception
+# AuthError Exception
 '''
 AuthError Exception
 A standardized way to communicate auth failure modes
 '''
+
+
 class AuthError(Exception):
     def __init__(self, error, status_code):
         self.error = error
@@ -23,9 +25,10 @@ class AuthError(Exception):
 # Auth Header
 # --------------------------------
 
-## Get Access Token from Authorization Header
+# Get Access Token from Authorization Header
 
-def get_token_auth_header(): 
+
+def get_token_auth_header():
     # get auth from header and verify auth exists
     auth = request.headers.get('Authorization', None)
     if not auth:
@@ -33,11 +36,11 @@ def get_token_auth_header():
             'code': 'authorization_header_missing',
             'description': 'Authorization header is expected.'
         }, 401)
-    
+
     # split keyword and token
     parts = auth.split()
 
-    #verify keyword is 'bearer', error if not
+    # verify keyword is 'bearer', error if not
     if parts[0].lower() != 'bearer':
         raise AuthError({
             'code': 'invalid_header',
@@ -56,12 +59,13 @@ def get_token_auth_header():
             'code': 'invalid_header',
             'description': 'Authorization header must be bearer token.'
         }, 401)
-    
+
     # get token from parts and return
     token = parts[1]
     return token
 
-## Verify user permissions
+# Verify user permissions
+
 
 def check_permissions(permission, payload):
 
@@ -82,7 +86,8 @@ def check_permissions(permission, payload):
     # return True if no AuthErrors
     return True
 
-## Validate and decode Auth) JWTs
+# Validate and decode Auth) JWTs
+
 
 def verify_decode_jwt(token):
 
@@ -102,7 +107,7 @@ def verify_decode_jwt(token):
             'code': 'invalid_header',
             'description': 'Authorization invalid.'
         }, 401)
-    
+
     # build rsa key if kid match
     for key in jwks['keys']:
         if key['kid'] == unverified_header['kid']:
@@ -113,7 +118,7 @@ def verify_decode_jwt(token):
                 'n': key['n'],
                 'e': key['e']
             }
-    
+
     # validate the token
     if rsa_key:
         try:
@@ -124,9 +129,9 @@ def verify_decode_jwt(token):
                 audience=API_AUDIENCE,
                 issuer='https://' + AUTH0_DOMAIN + '/'
             )
-        
+
             return payload
-        
+
         # catch common errors
         except jwt.ExpiredSignatureError:
             raise AuthError({
@@ -137,7 +142,7 @@ def verify_decode_jwt(token):
         except jwt.JWTClaimsError:
             raise AuthError({
                 'code': 'invalid_claims',
-                'description': 'Incorrect claims. Please, check the audience and issuer.'
+                'description': 'Invalid claims. Please check audience & issuer.'
             }, 401)
 
         except Exception:
@@ -151,12 +156,14 @@ def verify_decode_jwt(token):
         'description': 'Unable to find the appropriate key.'
     }, 400)
 
-## Decorator function to add authorization to endpoints
+# Decorator function to add authorization to endpoints
+
+
 def requires_auth(permission=''):
     def requires_auth_decorator(f):
         @wraps(f)
         def wrapper(*args, **kwargs):
-            # get token from header 
+            # get token from header
             token = get_token_auth_header()
             # decode and validate token, else raise AuthError
             try:
