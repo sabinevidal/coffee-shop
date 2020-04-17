@@ -35,13 +35,12 @@ def get_drinks():
         abort(404)
 
     # format using .short()
-    drinks_short = [drink.short() for drink in drinks]
+    available_drinks = [drink.long() for drink in drinks]
 
     # return drinks
     return jsonify({
-        # 'status_code': 200 TODO: CHECK
         'success': True,
-        'drinks': drinks_short
+        'drinks': available_drinks
     })
 
 # GET Route handler for getting drink details
@@ -76,12 +75,12 @@ def get_drinks_detail(jwt):
 def add_drink(jwt):
     # get drink info form request
     body = request.get_json()
-    title = body.get('title', None)
-    recipe = body.get('recipe', None)
+    new_title = body.get('title', None)
+    new_recipe = body.get('recipe', None)
 
     try:
         # create new drink
-        new_drink = Drink(title=title, recipe=json.dumps([recipe]))
+        new_drink = Drink(title=new_title, recipe=json.dumps([new_recipe]))
         # add drink to database
         new_drink.insert()
 
