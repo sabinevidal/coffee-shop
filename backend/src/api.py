@@ -16,7 +16,7 @@ CORS(app)
 !! NOTE THIS WILL DROP ALL RECORDS AND START YOUR DB FROM SCRATCH
 !! NOTE THIS MUST BE UNCOMMENTED ON FIRST RUN
 '''
-db_drop_and_create_all()
+# db_drop_and_create_all()
 
 # ----------------------------------
 # ROUTES
@@ -51,7 +51,7 @@ Requires the 'get:drinks-detail' permission
 @requires_auth('get:drinks-detail')
 def get_drinks_detail(jwt):
     # get all drinks 
-    drinks = Drink.query.all().long()
+    drinks = Drink.query.all()
     
     # 404 if no drinks
     if len(drinks) == 0:
@@ -75,22 +75,22 @@ Requires the 'post:drinks' permission
 def add_drink(jwt):
     # get drink info form request
     body = request.get_json()
-    title = body['title']
-    recipe = body['recipe']
-
-    # create new drink
-    drink = Drink(title=title, recipe=json.dumps(recipe)) #TODO: what is going on?? 
-
+    title = body.get('title', None)
+    recipe = body.get('recipe', None)
+    
     try:
+        # create new drink
+        new_drink = Drink(title=title, recipe=json.dumps([recipe])) #TODO: what is going on?? 
         # add drink to database
-        drink.insert()
+        new_drink.insert()
+
     except Exception as e:
         print('ERROR: ', str(e) )
         abort(422)
 
     return jsonify({
         'success': True,
-        'drinks': drink.long()
+        'drinks': new_drink.long()
     })
 
 '''
